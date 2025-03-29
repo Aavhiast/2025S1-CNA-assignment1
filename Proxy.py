@@ -111,14 +111,13 @@ while True:
     fileExists = os.path.isfile(cacheLocation)
     
     # Check wether the file is currently in the cache
-    cacheFile = open(cacheLocation, "r")
-    cacheData = cacheFile.readlines()
+    cacheFile = open(cacheLocation, "rb")
 
     print ('Cache hit! Loading from cache file: ' + cacheLocation)
     # ProxyServer finds a cache hit
     # Send back response to client 
     # ~~~~ INSERT CODE ~~~~
-    response = ''.join(cacheData).encode()
+    response = cacheFile.read()
     clientSocket.sendall(response) #RETURNS THE CONTENT OF THE CACHED FILE TO THE CLIENT
     # ~~~~ END CODE INSERT ~~~~
     cacheFile.close()
@@ -178,6 +177,21 @@ while True:
         if not chunk:
           break
         response += chunk
+        
+        try:
+          response_str = response.decode('ISO-8859-1') 
+          header_end = response_str.find('\r\n\r\n')
+          if header_end != -1:
+            response_header = response_str[:header_end]
+            response_body = response_str[header_end+4:]
+            print("===== ORIGIN RESPONSE HEADER =====")
+            print(response_header)
+            print("===== END HEADER =====")
+          else:
+            print("Could not find header-body separation.")
+        except:
+          print("Failed to decode origin server response.") # TO SEE WHAT'S THE CORRECT FORMAT
+
       # ~~~~ END CODE INSERT ~~~~
 
       # Send the response to the client
@@ -185,8 +199,6 @@ while True:
       clientSocket.sendall(response)
       cacheFile.close()
       print ('Sent to the client:')
-      print ('> ' + ''.join(cacheData))
-      continue # PREVENT FALLBACK TO THE ORIGINAL SERVER
       # ~~~~ END CODE INSERT ~~~~
 
       # Create a new file in the cache for the requested file.
