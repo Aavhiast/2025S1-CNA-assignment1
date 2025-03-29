@@ -183,6 +183,10 @@ while True:
       # Send the response to the client
       # ~~~~ INSERT CODE ~~~~
       clientSocket.sendall(response)
+      cacheFile.close()
+      print ('Sent to the client:')
+      print ('> ' + ''.join(cacheData))
+      continue # PREVENT FALLBACK TO THE ORIGINAL SERVER
       # ~~~~ END CODE INSERT ~~~~
 
       # Create a new file in the cache for the requested file.
