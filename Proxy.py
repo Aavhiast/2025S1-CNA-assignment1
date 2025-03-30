@@ -4,6 +4,7 @@ import sys
 import os
 import argparse
 import re
+import time
 
 # 1MB buffer size
 BUFFER_SIZE = 1000000
@@ -109,10 +110,28 @@ while True:
     print ('Cache location:\t\t' + cacheLocation)
 
     fileExists = os.path.isfile(cacheLocation)
-    
-    # Check wether the file is currently in the cache
+
+    # Check whether the file is currently in the cache
     cacheFile = open(cacheLocation, "r")
     cacheData = cacheFile.readlines()
+
+    # ~~~~ INSERT CODE ~~~~
+    # Check for cache expiration based on Cache-Control header
+    isExpired = False
+    for line in cacheData:
+      if line.lower().startswith("cache-control") and "max-age" in line.lower():
+        match = re.search(r'max-age=(\d+)', line)
+        if match:
+          max_age = int(match.group(1))
+          cache_time = os.path.getmtime(cacheLocation)
+          if time.time() - cache_time > max_age:
+            print("Cache expired. Need to re-fetch.")
+            isExpired = True
+        break
+
+    if isExpired:
+      raise Exception("Expired cache")
+    # ~~~~ END CODE INSERT ~~~~
 
     print ('Cache hit! Loading from cache file: ' + cacheLocation)
     # ProxyServer finds a cache hit
@@ -203,7 +222,7 @@ while True:
       # finished communicating with origin server - shutdown socket writes
       print ('origin response received. Closing sockets')
       originServerSocket.close()
-       
+
       clientSocket.shutdown(socket.SHUT_WR)
       print ('client socket shutdown for writing')
     except OSError as err:
@@ -213,3 +232,4 @@ while True:
     clientSocket.close()
   except:
     print ('Failed to close client socket')
+
