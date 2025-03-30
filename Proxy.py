@@ -143,6 +143,7 @@ while True:
     cacheFile.close()
     print ('Sent to the client:')
     print ('> ' + ''.join(cacheData))
+    continue # AVOID BACK TO THE ORIGIN SERVER
   except:
     # cache miss.  Get resource from origin server
     originServerSocket = None
